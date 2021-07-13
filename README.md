@@ -11,3 +11,4 @@ Run `go run main.go`
 ## Need to improve:
 - Add ENV
 - Scrapping with complex parameter (Suppose parameter is collected from other table when scrapping)
+- Add unit test
