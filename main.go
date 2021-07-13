@@ -17,25 +17,31 @@ func main() {
   }
   fmt.Println("parameters: %v", scrappingParameters)
 
-  for i := 0; i < len(scrappingParameters); i++ {
-    github := scrappingPage(scrappingParameters[i].Url)
-    fmt.Println(github)
-
-    // Add data to DB
-    database.AddGithubDB(github)
-  }
-
+  // Fetch old Github data
   githubs, err := database.FetchAllGithubs()
   if err != nil {
     log.Fatal(err)
   }
   fmt.Println("All Githubs: %v", githubs)
+
+  // Make concurrency scrapping
+  channel := make(chan entity.Github)
+
+  for i := 0; i < len(scrappingParameters); i++ {
+    go scrappingPage(scrappingParameters[i].Url, channel)
+  }
+
+  // Add data to DB
+  for github := range channel {
+    fmt.Println(github)
+    database.AddGithubDB(github)
+  }
 }
 
-func scrappingPage(url string) entity.Github {
+func scrappingPage(url string, channel chan entity.Github) {
   page := rod.New().MustConnect().MustPage(url).MustWindowFullscreen()
 
-  return entity.Github{
+  github := entity.Github{
     Owner: getOwner(page),
     Name: getName(page),
     Star: getStar(page),
@@ -43,6 +49,8 @@ func scrappingPage(url string) entity.Github {
     BranchCount: getBranchCount(page),
     TagCount: getTagCount(page),
   }
+
+  channel <- github
 }
 
 func getStar(page *rod.Page) string {
