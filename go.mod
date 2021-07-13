@@ -1,4 +1,4 @@
-module learn-rod
+module github.com/sonlh-0262/scrapping_github
 
 go 1.16
 
