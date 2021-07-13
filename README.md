@@ -10,5 +10,6 @@ Run `go run main.go`
 
 ## Need to improve:
 - Add ENV
+- Add channel and concurrent
 - Scrapping with complex parameter (Suppose parameter is collected from other table when scrapping)
 - Add unit test
