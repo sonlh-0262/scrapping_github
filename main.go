@@ -9,6 +9,10 @@ import (
   "github.com/go-rod/rod"
 )
 
+type PageStruct struct {
+  Page *rod.Page
+}
+
 func main() {
   // Fetch Scrapping parameter: it includes URl and parameter (if required)
   scrappingParameters, err := database.FetchAllScrappingParameters()
@@ -40,49 +44,52 @@ func main() {
 
 func scrappingPage(url string, channel chan entity.Github) {
   page := rod.New().MustConnect().MustPage(url).MustWindowFullscreen()
+  site := PageStruct{
+    Page: page,
+  }
 
   github := entity.Github{
-    Owner: getOwner(page),
-    Name: getName(page),
-    Star: getStar(page),
-    Fork: getFork(page),
-    BranchCount: getBranchCount(page),
-    TagCount: getTagCount(page),
+    Owner: site.getOwner(),
+    Name: site.getName(),
+    Star: site.getStar(),
+    Fork: site.getFork(),
+    BranchCount: site.getBranchCount(),
+    TagCount: site.getTagCount(),
   }
 
   channel <- github
 }
 
-func getStar(page *rod.Page) string {
-  return getText(page, "#js-repo-pjax-container > div.hx_page-header-bg > div.d-flex > ul > li:nth-child(2) > a.social-count")
+func (site PageStruct) getStar() string {
+  return site.getText("#js-repo-pjax-container > div.hx_page-header-bg > div.d-flex > ul > li:nth-child(2) > a.social-count")
 }
 
-func getFork(page *rod.Page) string {
-  return getText(page, "#js-repo-pjax-container > div.hx_page-header-bg > div.d-flex > ul > li:nth-child(3) > a.social-count")
+func (site PageStruct) getFork() string {
+  return site.getText("#js-repo-pjax-container > div.hx_page-header-bg > div.d-flex > ul > li:nth-child(3) > a.social-count")
 }
 
-func getOwner(page *rod.Page) string {
-  return getText(page, "#js-repo-pjax-container > div.hx_page-header-bg > div.d-flex > div.flex-auto > h1 > span > a")
+func (site PageStruct) getOwner() string {
+  return site.getText("#js-repo-pjax-container > div.hx_page-header-bg > div.d-flex > div.flex-auto > h1 > span > a")
 }
 
-func getName(page *rod.Page) string {
-  return getText(page, "#js-repo-pjax-container > div.hx_page-header-bg > div.d-flex > div.flex-auto > h1 > strong > a")
+func (site PageStruct) getName() string {
+  return site.getText("#js-repo-pjax-container > div.hx_page-header-bg > div.d-flex > div.flex-auto > h1 > strong > a")
 }
 
-func getBranchCount(page *rod.Page) int {
-  branchCountText := getText(page, "#repo-content-pjax-container > div > div.gutter-condensed > div > div.file-navigation > div.flex-self-center > a > strong")
+func (site PageStruct) getBranchCount() int {
+  branchCountText := site.getText("#repo-content-pjax-container > div > div.gutter-condensed > div > div.file-navigation > div.flex-self-center > a > strong")
   branchCount, _ := strconv.Atoi(branchCountText)
 
   return branchCount
 }
 
-func getTagCount(page *rod.Page) int {
-  tagCountText := getText(page, "#repo-content-pjax-container > div > div.gutter-condensed > div > div.file-navigation > div.flex-self-center > a:nth-child(2) > strong")
+func (site PageStruct) getTagCount() int {
+  tagCountText := site.getText("#repo-content-pjax-container > div > div.gutter-condensed > div > div.file-navigation > div.flex-self-center > a:nth-child(2) > strong")
   tagCount, _ := strconv.Atoi(tagCountText)
 
   return tagCount
 }
 
-func getText(page *rod.Page, cssPath string) string {
-  return page.MustElement(cssPath).MustText()
+func (site PageStruct) getText(cssPath string) string {
+  return site.Page.MustElement(cssPath).MustText()
 }
